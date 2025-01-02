@@ -18,10 +18,6 @@ if src_path not in sys.path:
 # Init app
 app = Flask(__name__)
 
-# conf_local_load=extract_features_query.confs['superpoint_aachen']
-# conf_global_load=extract_features_query.confs['netvlad']
-# model_local=loc_functions.load_model(conf_local_load)
-# model_global=loc_functions.load_model(conf_global_load)
 
 # Define folder path contains query images of users
 images_query=Path(f'query')
@@ -81,4 +77,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, threaded=False)
+    app.run(host='0.0.0.0', port=5000, threaded=True)

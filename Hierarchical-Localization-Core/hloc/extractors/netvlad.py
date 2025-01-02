@@ -60,11 +60,12 @@ class NetVLAD(BaseModel):
         checkpoint_path = Path(
             torch.hub.get_dir(), "netvlad", conf["model_name"] + ".mat"
         )
+        print(checkpoint_path)
         if not checkpoint_path.exists():
             checkpoint_path.parent.mkdir(exist_ok=True, parents=True)
             url = self.checkpoint_urls[conf["model_name"]]
             torch.hub.download_url_to_file(url, checkpoint_path)
-
+        
         # Create the network.
         # Remove classification head.
         backbone = list(models.vgg16().children())[0]
