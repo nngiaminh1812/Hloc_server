@@ -63,10 +63,10 @@ def localize_endpoint():
         HLOC_model=config.confs_path[config.confs_labels[label]]
 
         # Extract global, local feature and match feature.
-        loc_functions.process_query(HLOC_model,images_query,image_name,loc_pairs)
+        pairs_rs=loc_functions.process_query(HLOC_model,images_query,image_name,loc_pairs)
 
         # Get data 
-        rotation,translation=loc_functions.localize(outdoor_model,HLOC_model,loc_pairs,image_path,image_name)
+        rotation,translation=loc_functions.localize(outdoor_model,HLOC_model,loc_pairs,image_path,image_name,pairs_rs,read_from_file=False)
         return jsonify({
             "rotation": rotation,
             "translation": translation

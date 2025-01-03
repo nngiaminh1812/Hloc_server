@@ -73,14 +73,15 @@ def pairs_from_score_matrix(
 
 def main(
     descriptors,
-    output,
-    num_matched,
+    output=None,
+    num_matched=None,
     query_prefix=None,
     query_list=None,
     db_prefix=None,
     db_list=None,
     db_model=None,
     db_descriptors=None,
+    return_rs=False,
 ):
     logger.info("Extracting image pairs from a retrieval database.")
 
@@ -114,8 +115,12 @@ def main(
     pairs = [(query_names[i], db_names[j]) for i, j in pairs]
 
     logger.info(f"Found {len(pairs)} pairs.")
-    with open(output, "w") as f:
-        f.write("\n".join(" ".join([i, j]) for i, j in pairs))
+    if not return_rs:
+        with open(output, "w") as f:
+            f.write("\n".join(" ".join([i, j]) for i, j in pairs))
+    else:
+        rs="\n".join(" ".join([i, j]) for i, j in pairs)
+        return rs
 
 
 if __name__ == "__main__":

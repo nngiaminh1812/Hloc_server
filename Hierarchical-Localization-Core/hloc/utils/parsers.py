@@ -49,8 +49,13 @@ def parse_retrieval(path):
             q, r = p.split()
             retrieval[q].append(r)
     return dict(retrieval)
-
-
+def parse_retrieval_str(pairs:str):
+    pairs_rs = []
+    
+    for line in pairs.strip().split("\n"):
+        key, value = line.split()
+        pairs_rs.append((key, value))
+    return pairs_rs
 def names_to_pair(name0, name1, separator="/"):
     return separator.join((name0.replace("/", "-"), name1.replace("/", "-")))
 
