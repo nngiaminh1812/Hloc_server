@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from . import logger, matchers
 from .utils.base_model import dynamic_load
-from .utils.parsers import names_to_pair, names_to_pair_old, parse_retrieval
+from .utils.parsers import names_to_pair, names_to_pair_old, parse_retrieval,parse_retrieval_str
 from .model_loader import model_match
 """
 A set of standard configurations that can be directly selected from the command
@@ -160,6 +160,8 @@ def main(
     matches: Optional[Path] = None,
     features_ref: Optional[Path] = None,
     overwrite: bool = False,
+    read_from_file=True,
+    pairs_rs:str=None,
 ) -> Path:
     if isinstance(features, Path) or Path(features).exists():
         features_q = features
@@ -178,7 +180,7 @@ def main(
 
     if features_ref is None:
         features_ref = features_q
-    match_from_paths(conf, pairs, matches, features_q, features_ref, overwrite)
+    match_from_paths(conf, pairs, matches, features_q, features_ref, overwrite, read_from_file,pairs_rs)
 
     return matches
 
@@ -214,6 +216,9 @@ def match_from_paths(
     feature_path_q: Path,
     feature_path_ref: Path,
     overwrite: bool = False,
+    read_from_file=True,
+    pairs_rs:str=None,
+
 ) -> Path:
     logger.info(
         "Matching local features with configuration:" f"\n{pprint.pformat(conf)}"
@@ -225,9 +230,12 @@ def match_from_paths(
         raise FileNotFoundError(f"Reference feature file {feature_path_ref}.")
     match_path.parent.mkdir(exist_ok=True, parents=True)
 
-    assert pairs_path.exists(), pairs_path
-    pairs = parse_retrieval(pairs_path)
-    pairs = [(q, r) for q, rs in pairs.items() for r in rs]
+    if read_from_file:
+        assert pairs_path.exists(), pairs_path
+        pairs = parse_retrieval(pairs_path)
+        pairs = [(q, r) for q, rs in pairs.items() for r in rs]
+    else:
+        pairs=parse_retrieval_str(pairs_rs)
     pairs = find_unique_new_pairs(pairs, None if overwrite else match_path)
     if len(pairs) == 0:
         logger.info("Skipping the matching.")

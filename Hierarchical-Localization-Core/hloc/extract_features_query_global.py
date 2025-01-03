@@ -31,7 +31,7 @@ confs = {
         "output": "feats-superpoint-n4096-r1024",
         "model": {
             "name": "superpoint",
-            "nms_radius": 1,
+            "nms_radius": 3,
             "max_keypoints": 2048,
         },
         "preprocessing": {
