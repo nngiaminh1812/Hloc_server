@@ -26,9 +26,10 @@ images_query=Path(f'query')
 loc_pairs=Path('Hierarchical-Localization-Core/outputs/Outdoor/pairs-loc.txt')
 
 # Load point cloud models 
-outdoor_model=pycolmap.Reconstruction(config.confs_path['Outdoor']['model_point'])
-bcef_2_model=pycolmap.Reconstruction(config.confs_path['BCEF_2']['model_point'])
+outdoor_model = pycolmap.Reconstruction(config.confs_path['Outdoor']['model_point'])
+bcef_2_model = pycolmap.Reconstruction(config.confs_path['BCEF_2']['model_point'])
 
+points_model = {'0':outdoor_model, '2':bcef_2_model}
 # Load built model extract feature and match feature
 
 @app.route('/localize', methods=['POST'])
@@ -64,9 +65,9 @@ def localize_endpoint():
 
         # Extract global, local feature and match feature.
         pairs_rs=loc_functions.process_query(HLOC_model,images_query,image_name,loc_pairs)
-
+        
         # Get data 
-        rotation,translation=loc_functions.localize(outdoor_model,HLOC_model,loc_pairs,image_path,image_name,pairs_rs,read_from_file=False)
+        rotation,translation=loc_functions.localize(points_model[label],HLOC_model,loc_pairs,image_path,image_name,pairs_rs,read_from_file=False)
         return jsonify({
             "rotation": rotation,
             "translation": translation
