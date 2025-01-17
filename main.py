@@ -75,7 +75,3 @@ def localize_endpoint():
 @app.route('/', methods=['GET'])
 def index():
     return "Chu mi ngaaaaaa"
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, threaded=True)

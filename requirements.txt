@@ -2,3 +2,4 @@ flask
 pycolmap
 h5py
 torch
+cv2
