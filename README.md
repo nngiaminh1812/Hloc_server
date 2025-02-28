@@ -17,7 +17,7 @@
 ## 2.1 Create HLOC server
 Navigate to root `Hloc_server`, run this code to run HLOC server on localhost:
 ```
-python3 main.py
+gunicorn --workers 2 --threads 2 --bind 0.0.0.0:5000 wsgi:app
 ```
 ## 2.2 Using on other server
 In another server, use this code get **translation** and **rotation** results with `bash` cmd:

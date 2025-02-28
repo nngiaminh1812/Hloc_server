@@ -1,7 +1,10 @@
 import os
 import sys
-from flask import jsonify 
+from flask import jsonify
 import pycolmap
+from collections import Counter
+from config import confs_path, confs_labels
+
 src_path = os.path.abspath("Hierarchical-Localization-Core/")
 if src_path not in sys.path:
     sys.path.append(src_path)
@@ -14,16 +17,41 @@ from hloc import (
 from hloc.localize_sfm import QueryLocalizer, pose_from_cluster
 from hloc import extractors, logger
 from hloc.utils.base_model import dynamic_load
-import torch 
+import torch
 
-# Config for extract and match query 
+# Config for extract and match query
 retrieval_conf_loc = extract_features_query_global.confs["netvlad"]
 feature_conf_loc = extract_features_query_local.confs["superpoint_aachen"]
 matcher_conf_loc = match_features_query.confs["NN-superpoint"]
-NUM_PAIRS=10
+NUM_PAIRS = 20
 
-# Extract and match query 
-def process_query(conf_path,images_query,image_name,loc_pairs):
+# Query on global all envs to get the most common pref env
+def query_global(conf_path, images_query, image_name, loc_pairs=None):
+    try: 
+        extract_features_query_global.main(
+            retrieval_conf_loc, 
+            images_query, 
+            export_dir=conf_path['outputs_root'], 
+            image_list=[image_name],
+            overwrite=True
+        )
+        print("[INFO] Generating pairs from retrieval")
+        pairs_result=pairs_from_retrieval.main(
+            conf_path['retrieval_path'], 
+            num_matched=NUM_PAIRS, 
+            query_list=[image_name],
+            return_rs=True
+        )
+
+        return pairs_result
+    
+    except Exception as e:
+        print(f"[ERROR]: {str(e)}")
+        return jsonify({"error": str(e)}), 500    
+
+# Process for specific env after get the most common prefix env
+def process_query(conf_path, images_query, image_name, loc_pairs):
+
     try: 
         print("[INFO] Extracting features")
         extract_features_query_local.main(
@@ -59,12 +87,12 @@ def process_query(conf_path,images_query,image_name,loc_pairs):
             pairs_rs=pairs_result
         )
         return pairs_result
+    
     except Exception as e:
         print(f"[ERROR]: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    
-# Get data localize
-def localize(points_model,conf_path,loc_pairs,image_path,image_name,pairs_rs:str=None,read_from_file=True):
+
+def localize(points_model, conf_path, loc_pairs, image_path, image_name, pairs_rs: str = None, read_from_file=True):
     references_registered = []
     try:
         if read_from_file:
@@ -74,10 +102,11 @@ def localize(points_model,conf_path,loc_pairs,image_path,image_name,pairs_rs:str
                     ref_name = line.split(" ")[1].strip()
                     references_registered.append(ref_name)
         else:
-            lines=pairs_rs.split("\n")
+            lines = pairs_rs.split("\n")
             for line in lines:
                 ref_name = line.split(" ")[1].strip()
                 references_registered.append(ref_name)
+
         print("[INFO] Inferring camera from image")
         camera = pycolmap.infer_camera_from_image(image_path)
         ref_ids = []
@@ -97,10 +126,9 @@ def localize(points_model,conf_path,loc_pairs,image_path,image_name,pairs_rs:str
 
         print("[INFO] Returning pose")
         pose = log['PnP_ret']['cam_from_world']
-        
         rotation = [pose.rotation]
         translation = [pose.translation]
-        return str(rotation),str(translation)
+        return str(rotation), str(translation)
     except Exception as e:
         print(f"[ERROR]: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        raise
