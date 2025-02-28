@@ -23,7 +23,7 @@ import torch
 retrieval_conf_loc = extract_features_query_global.confs["netvlad"]
 feature_conf_loc = extract_features_query_local.confs["superpoint_aachen"]
 matcher_conf_loc = match_features_query.confs["NN-superpoint"]
-NUM_PAIRS = 20
+NUM_PAIRS = 30
 
 # Query on global all envs to get the most common pref env
 def query_global(conf_path, images_query, image_name, loc_pairs=None):
@@ -50,7 +50,7 @@ def query_global(conf_path, images_query, image_name, loc_pairs=None):
         return jsonify({"error": str(e)}), 500    
 
 # Process for specific env after get the most common prefix env
-def process_query(conf_path, images_query, image_name, loc_pairs):
+def process_query(conf_path, images_query, image_name, loc_pairs=None):
 
     try: 
         print("[INFO] Extracting features")

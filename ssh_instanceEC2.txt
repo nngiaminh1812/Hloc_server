@@ -1,2 +1,0 @@
-chmod 400 "anhyeuem.pem"
-ssh -i "/home/nngiaminh1812/test.pem" ubuntu@ec2-98-84-70-69.compute-1.amazonaws.com

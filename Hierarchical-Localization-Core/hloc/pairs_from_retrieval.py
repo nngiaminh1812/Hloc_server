@@ -2,7 +2,7 @@ import argparse
 import collections.abc as collections
 from pathlib import Path
 from typing import Optional
-
+import itertools
 import h5py
 import numpy as np
 import torch
@@ -36,15 +36,25 @@ def parse_names(prefix, names, names_all):
 
 
 def get_descriptors(names, path, name2idx=None, key="global_descriptor"):
+    #db_desc = get_descriptors(db_names, db_descriptors, name2db)
     if name2idx is None:
         with h5py.File(str(path), "r", libver="latest") as fd:
             desc = [fd[n][key].__array__() for n in names]
+    # else:
+    #     desc = []
+    #     for n in names:
+            
+    #         with h5py.File(str(path[name2idx[n]]), "r", libver="latest") as fd:
+    #             desc.append(fd[n][key].__array__())
+    # return torch.from_numpy(np.stack(desc, 0)).float()
     else:
         desc = []
-        for n in names:
-            with h5py.File(str(path[name2idx[n]]), "r", libver="latest") as fd:
-                desc.append(fd[n][key].__array__())
-    return torch.from_numpy(np.stack(desc, 0)).float()
+        # Open all required files once
+        with h5py.File(str(path[name2idx[names[0]]]), "r", libver="latest") as fd:
+            for n in names:
+                desc.append(fd[n][key][()])  # Directly fetch as NumPy array
+    
+    return torch.tensor(np.stack(desc, axis=0), dtype=torch.float32)
 
 
 def pairs_from_score_matrix(
@@ -94,7 +104,6 @@ def main(
     name2db = {n: i for i, p in enumerate(db_descriptors) for n in list_h5_names(p)}
     db_names_h5 = list(name2db.keys())
     query_names_h5 = list_h5_names(descriptors)
-
     if db_model:
         images = read_images_binary(db_model / "images.bin")
         db_names = [i.name for i in images.values()]
@@ -103,17 +112,14 @@ def main(
     if len(db_names) == 0:
         raise ValueError("Could not find any database image.")
     query_names = parse_names(query_prefix, query_list, query_names_h5)
-
     device = "cuda" if torch.cuda.is_available() else "cpu"
     db_desc = get_descriptors(db_names, db_descriptors, name2db)
     query_desc = get_descriptors(query_names, descriptors)
     sim = torch.einsum("id,jd->ij", query_desc.to(device), db_desc.to(device))
-
     # Avoid self-matching
     self = np.array(query_names)[:, None] == np.array(db_names)[None]
     pairs = pairs_from_score_matrix(sim, self, num_matched, min_score=0)
     pairs = [(query_names[i], db_names[j]) for i, j in pairs]
-
     logger.info(f"Found {len(pairs)} pairs.")
     if not return_rs:
         with open(output, "w") as f:
