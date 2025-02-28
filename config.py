@@ -106,10 +106,7 @@ confs_path={
     },
     "global":{
         "outputs_root":Path(GLOBAL_ROOT),
-        "feature_path":Path("/".join([GLOBAL_ROOT, FEATURE_NAME])),
-        "match_path":Path("/".join([GLOBAL_ROOT, MATCH_NAME])),
         "retrieval_path":Path("/".join([GLOBAL_ROOT, RETRIEVAL_NAME])),
-        "model_point":Path("/".join([GLOBAL_ROOT, MODEL_POINT_NAME]))
     }
 }
 
