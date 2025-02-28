@@ -4,7 +4,7 @@ from flask import jsonify
 import pycolmap
 from collections import Counter
 from config import confs_path, confs_labels
-
+import h5py
 src_path = os.path.abspath("Hierarchical-Localization-Core/")
 if src_path not in sys.path:
     sys.path.append(src_path)
@@ -25,6 +25,16 @@ feature_conf_loc = extract_features_query_local.confs["superpoint_aachen"]
 matcher_conf_loc = match_features_query.confs["NN-superpoint"]
 NUM_PAIRS = 30
 
+
+def delete_query_key(file_path,query_key):
+    file = h5py.File(file_path, 'a')
+    if query_key in file:
+        del file[query_key]
+    file.close()
+def delete_query_h5(feature_path,match_path,retrieval_path,query_key):
+    delete_query_key(feature_path,query_key)
+    delete_query_key(match_path,query_key)
+    delete_query_key(retrieval_path,query_key)
 # Query on global all envs to get the most common pref env
 def query_global(conf_path, images_query, image_name, loc_pairs=None):
     try: 
@@ -132,3 +142,4 @@ def localize(points_model, conf_path, loc_pairs, image_path, image_name, pairs_r
     except Exception as e:
         print(f"[ERROR]: {str(e)}")
         raise
+
