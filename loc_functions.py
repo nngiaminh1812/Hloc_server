@@ -135,9 +135,25 @@ def localize(points_model, conf_path, loc_pairs, image_path, image_name, pairs_r
         ret, log = pose_from_cluster(localizer, image_name, camera, ref_ids, conf_path['feature_path'], conf_path['match_path'])
 
         print("[INFO] Returning pose")
-        pose = log['PnP_ret']['cam_from_world']
-        rotation = [pose.rotation]
-        translation = [pose.translation]
+        print(f"[INFO] Camera from world {log['PnP_ret']['cam_from_world']}")
+        rigid3d = ret['cam_from_world']
+
+        rotation_quaternion = rigid3d.rotation.quat
+        translation = rigid3d.translation
+
+
+        # Chuyển đổi quaternions thành ma trận xoay
+        rotation_matrix = R.from_quat(rotation_quaternion).as_matrix()
+
+        # Tính tọa độ camera trong hệ tọa độ thế giới
+        camera_position = -rotation_matrix.T @ translation
+
+        # Create Rigid3D object
+        rigid3d = Rigid3D(rotation_quaternion, camera_position)
+        # pose = log['PnP_ret']['cam_from_world']
+        rotation = rigid3d.rotation.quat
+        translation = rigid3d.translation
+        print(f"[INFO] Rotation:{rotation} and translation:{translation}")
         return str(rotation), str(translation)
     except Exception as e:
         print(f"[ERROR]: {str(e)}")
