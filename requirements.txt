@@ -2,4 +2,11 @@ flask
 pycolmap
 h5py
 torch
-cv2
+opencv-python
+Pillow
+numpy
+tqdm
+gunicorn
+torchvision
+scipy
+
