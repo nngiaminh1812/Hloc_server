@@ -1,0 +1,34 @@
+# Ignore Git files
+.git/
+
+# Ignore Python cache files
+__pycache__/
+
+# Ignore local environment files
+.env
+venv/
+
+# Ignore large data folders (if not needed in the image)
+# query/
+#Hierarchical-Localization-Core/
+
+# Ignore Docker-related files (if any)
+docker-compose.yml
+docker-compose.override.yml
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore macOS-specific files
+.DS_Store
+
+# Ignore Windows-specific files
+Thumbs.db
