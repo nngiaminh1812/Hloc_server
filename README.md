@@ -26,3 +26,28 @@ In another server, use this code get **translation** and **rotation** results wi
 ```
 - `x`: is label of model was built. To get label information, refer to the `config.py` file.
 
+### Docker CMD:
+Build image:
+```
+docker build -t final-flask-app .
+```
+List docker images:
+```
+docker images
+```
+Run docker image:
+```
+docker run -p 3185:3185 flask-app
+```
+Delete all images, containers, cache, ..
+```
+docker system prune -a
+```
+Rename docker image:
+```
+docker tag final-flask-app:latest puffycheeks/flask-app:latest
+```
+Push image to docker hub:
+```
+docker push username/name_img:tag
+```

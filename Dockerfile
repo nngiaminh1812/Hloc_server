@@ -26,7 +26,7 @@ COPY . .
 ENV PYTHONPATH="/app/Hierarchical-Localization-Core:$PYTHONPATH"
 
 # Expose port
-EXPOSE 5000
+EXPOSE 3185
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--threads", "3", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3185", "--workers", "3", "--threads", "3", "main:app"]
