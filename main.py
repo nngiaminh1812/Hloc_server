@@ -135,7 +135,74 @@ def keypoints_endpoints():
         })
     except Exception as e:
             print(f"[ERROR]: {str(e)}")
-            return jsonify({"error": str(e)}), 500   
+            return jsonify({"error": str(e)}), 500  
+        
+@app.route('/keylocs', methods=['POST'])
+def keylocs_endpoints():
+    # Get the image from the request, run the keypoints function, and return the keypoints
+    # If the image has enough keypoints, return the keypoints and run the localization function, return location result again 
+    # If the image does not have enough keypoints, return the keypoints and a message saying that the image does not have enough keypoints to localize
+    
+    os.makedirs(TMP_DIR_FRAME,exist_ok=True)
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    image_name = file.filename
+    if file:
+        print(f"[INFO] Received image {image_name}")
+        image_path=os.path.join(TMP_DIR_FRAME,image_name)
+        file.save(image_path)
+        print(f"[INFO] Saved image to tmp folder with path {image_path}")
+    try:
+        results=keypoints_functions.get_keypoints_utils(TMP_DIR_FRAME,image_name,conf_local_feature,model_local)
+        keypoints=results['keypoints']
+        num_keypoints=len(keypoints)
+        can_query=True
+        if num_keypoints<THRESHOLD_KEYPOINTS:
+            can_query=False
+            os.remove(image_path)
+            return jsonify({
+                "key_points": keypoints.astype(float).tolist(),
+                "can_query":can_query
+            })
+        
+        # If the image has enough keypoints, run the localization function and return the result
+        global_model = config.confs_path['global']
+        pairs_rs = loc_functions.query_global(global_model, Path(TMP_DIR_FRAME), image_name)
+        # Determine the most common environment
+        lines = [line for line in pairs_rs.split("\n") if line.strip()]
+        env_prefixes = [line.split(" ")[1].split("_")[0] for line in lines]
+        most_common_env = Counter(env_prefixes).most_common(1)[0][0]
+        print(f"[INFO] Using model {most_common_env}")
+        # Use the specific environment model for localization
+        HLOC_model = config.confs_path[config.confs_labels[most_common_env]]
+        
+        pairs_rs_env=loc_functions.process_query(HLOC_model,Path(TMP_DIR_FRAME),image_name)
+        
+        # Get data 
+        rotation,translation=loc_functions.localize(points_model[most_common_env],HLOC_model,loc_pairs,image_path,image_name,pairs_rs_env,read_from_file=False)
+
+        # Delete query image store in tmp folder 
+        os.remove(image_path)
+
+        # Delete query key in feature_path,match_path,retrieval_path 
+        feature_path,match_path,retrieval_path=HLOC_model["feature_path"],HLOC_model["match_path"],HLOC_model["retrieval_path"]
+        loc_functions.delete_query_h5(feature_path,match_path,retrieval_path,image_name)
+
+
+        return jsonify({
+            "key_points": keypoints.astype(float).tolist(),
+            "can_query":can_query,
+            "rotation": rotation,
+            "translation": translation
+            
+        })
+    except Exception as e:
+            print(f"[ERROR]: {str(e)}")
+            return jsonify({"error": str(e)}), 500  
+        
 @app.route('/', methods=['GET'])
 def index():
     return "Chu mi ngaaaaaa"
